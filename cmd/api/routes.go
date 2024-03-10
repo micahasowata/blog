@@ -8,6 +8,7 @@ import (
 
 func (app *application) routes() http.Handler {
 	router := chi.NewRouter()
-	app.setMiddlewares(router)
+	app.stack(router)
+	router.Get("/", nil)
 	return router
 }
