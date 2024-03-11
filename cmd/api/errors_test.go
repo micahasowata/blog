@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -117,4 +118,41 @@ func TestValidationErrHandler(t *testing.T) {
 		rs := rr.Result()
 		assert.Equal(t, http.StatusInternalServerError, rs.StatusCode)
 	})
+}
+
+func TestDuplicateUserDataHandler(t *testing.T) {
+	app := setupApp(t, nil)
+
+	tests := []struct {
+		name string
+		err  error
+		code int
+	}{
+		{
+			name: "duplicate username",
+			err:  models.ErrDuplicateUsername,
+			code: http.StatusConflict,
+		},
+		{
+			name: "duplicate email",
+			err:  models.ErrDuplicateEmail,
+			code: http.StatusConflict,
+		},
+		{
+			name: "another error",
+			err:  errors.New("just another error"),
+			code: http.StatusInternalServerError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+
+			app.duplicateUserDataHandler(rr, tt.err)
+
+			rs := rr.Result()
+			assert.Equal(t, tt.code, rs.StatusCode)
+		})
+	}
 }
