@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -46,20 +47,53 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestBadRequestHandler(t *testing.T) {
-	rr := httptest.NewRecorder()
-
-	err := &jason.Err{
-		Msg: "invalid body",
+	app := &application{
+		Jason:  jason.New(100, false, true),
+		logger: zap.NewExample(),
+	}
+	tests := []struct {
+		name string
+		err  error
+		code int
+	}{
+		{
+			name: "valid",
+			err:  &jason.Err{Msg: "invalid body"},
+			code: http.StatusBadRequest,
+		},
+		{
+			name: "invalid",
+			err:  errors.New("invalid body"),
+			code: http.StatusInternalServerError,
+		},
 	}
 
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+
+			app.badRequestHandler(rr, tt.err)
+
+			rs := rr.Result()
+
+			assert.Equal(t, tt.code, rs.StatusCode)
+		})
+	}
+}
+
+func TestServerErrorHandler(t *testing.T) {
 	app := &application{
 		Jason:  jason.New(100, false, true),
 		logger: zap.NewExample(),
 	}
 
+	err := errors.New("just an error")
+
+	rr := httptest.NewRecorder()
+
 	app.badRequestHandler(rr, err)
 
 	rs := rr.Result()
 
-	assert.Equal(t, http.StatusBadRequest, rs.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, rs.StatusCode)
 }

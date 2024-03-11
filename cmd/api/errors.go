@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -71,11 +72,23 @@ func (app *application) notFoundHandler(w http.ResponseWriter, r *http.Request) 
 
 	app.errorResponse(w, e)
 }
+func (app *application) serverErrorHandler(w http.ResponseWriter, err error) {
+	e := &errResponse{
+		Message: "request could no longer be process",
+		Code:    0004,
+		Response: errHTTP{
+			Message: "request could no longer be process",
+			Code:    http.StatusInternalServerError,
+		},
+		Cause: err,
+	}
+	app.errorResponse(w, e)
+}
 
 func (app *application) badRequestHandler(w http.ResponseWriter, err error) {
 	bodyErr, ok := err.(*jason.Err)
 	if !ok {
-		app.errorResponse(w, nil)
+		app.serverErrorHandler(w, errors.New("non-json request error"))
 		return
 	}
 
