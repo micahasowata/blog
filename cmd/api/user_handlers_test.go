@@ -78,6 +78,21 @@ func TestRegisterUser(t *testing.T) {
 			body: `{"password":"9LdPaiw8B"}`,
 			code: http.StatusBadRequest,
 		},
+		{
+			name: "invalid body",
+			body: `{"name": "addam","username": "§age","email": "theaddam@gmail.com"}`,
+			code: http.StatusUnprocessableEntity,
+		},
+		{
+			name: "duplicate username",
+			body: `{"name": "addam","username": "iamadam","email": "theaddam@gmail.com"}`,
+			code: http.StatusConflict,
+		},
+		{
+			name: "duplicate email",
+			body: `{"name": "addam","username": "iamadam","email": "theaddam45@gmail.com"}`,
+			code: http.StatusConflict,
+		},
 	}
 
 	for _, tt := range tests {

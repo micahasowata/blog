@@ -11,7 +11,7 @@ import (
 func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name     string `json:"name" validate:"required,lte=150"`
-		Username string `json:"username" validate:"required,gte=2,lte=25"`
+		Username string `json:"username" validate:"required,gte=2,lte=25,ascii"`
 		Email    string `json:"email" validate:"required,email,lte=150"`
 	}
 
