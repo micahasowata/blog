@@ -21,9 +21,9 @@ confirm:
 ## test: run all tests
 .PHONY: test
 test:
-	go test -v -race -buildvcs ./...
+	@go test -v -race -buildvcs -cover ./...
 
 ## run: run the  application
 .PHONY: run
 run: 
-	go run ./cmd/api
+	@go run ./cmd/api
