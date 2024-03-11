@@ -18,9 +18,7 @@ func TestMethodNotAllowed(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	app := &application{
-		Jason: jason.New(100, false, true),
-	}
+	app := setupApp(t, nil)
 
 	app.methodNotAllowed(rr, r)
 
@@ -35,9 +33,7 @@ func TestNotFound(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	app := &application{
-		Jason: jason.New(100, false, true),
-	}
+	app := setupApp(t, nil)
 
 	app.notFoundHandler(rr, r)
 
@@ -47,10 +43,8 @@ func TestNotFound(t *testing.T) {
 }
 
 func TestBadRequestHandler(t *testing.T) {
-	app := &application{
-		Jason:  jason.New(100, false, true),
-		logger: zap.NewExample(),
-	}
+	app := setupApp(t, nil)
+
 	tests := []struct {
 		name string
 		err  error
@@ -96,4 +90,31 @@ func TestServerErrorHandler(t *testing.T) {
 	rs := rr.Result()
 
 	assert.Equal(t, http.StatusInternalServerError, rs.StatusCode)
+}
+
+func TestValidationErrHandler(t *testing.T) {
+	app := setupApp(t, nil)
+
+	t.Run("valid", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+
+		email := "addam.go"
+		err := app.validate.Var(email, "email")
+		require.NotNil(t, err)
+		app.validationErrHandler(rr, err)
+
+		rs := rr.Result()
+
+		assert.Equal(t, http.StatusUnprocessableEntity, rs.StatusCode)
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+
+		err := errors.New("just another error")
+		app.validationErrHandler(rr, err)
+
+		rs := rr.Result()
+		assert.Equal(t, http.StatusInternalServerError, rs.StatusCode)
+	})
 }

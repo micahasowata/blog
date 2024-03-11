@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -88,7 +87,7 @@ func (app *application) serverErrorHandler(w http.ResponseWriter, err error) {
 func (app *application) badRequestHandler(w http.ResponseWriter, err error) {
 	bodyErr, ok := err.(*jason.Err)
 	if !ok {
-		app.serverErrorHandler(w, errors.New("non-json request error"))
+		app.serverErrorHandler(w, err)
 		return
 	}
 
@@ -103,4 +102,33 @@ func (app *application) badRequestHandler(w http.ResponseWriter, err error) {
 		Cause: err,
 	}
 	app.errorResponse(w, e)
+}
+
+func (app *application) validationErrHandler(w http.ResponseWriter, err error) {
+	validationErrs, err := app.formatValidationErr(err)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	e := &errResponse{
+		Message: "invalid data in request data",
+		Details: jason.Envelope{
+			"errors": validationErrs,
+		},
+		Code: 0005,
+		Response: errHTTP{
+			Message: "request body contains data that does not meet the requirements",
+			Code:    http.StatusUnprocessableEntity,
+		},
+		Cause: err,
+	}
+
+	app.errorResponse(w, e)
+
+}
+
+func (app *application) writeErrHandler(w http.ResponseWriter, err error) {
+	app.logger.Error(err.Error())
+	w.WriteHeader(http.StatusInternalServerError)
 }
