@@ -8,6 +8,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
+	"github.com/hibiken/asynq"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
@@ -23,6 +24,7 @@ type application struct {
 	translator ut.Translator
 	validate   *validator.Validate
 	models     *models.Models
+	executor   *asynq.Client
 }
 
 func main() {
@@ -50,6 +52,10 @@ func main() {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	en_translations.RegisterDefaultTranslations(validate, translator)
 
+	executor := asynq.NewClient(asynq.RedisClientOpt{
+		Addr: config.AsynqRDC,
+	})
+
 	app := &application{
 		Jason:      jason.New(int64(config.MaxSize), false, true),
 		logger:     logger,
@@ -57,6 +63,7 @@ func main() {
 		translator: translator,
 		validate:   validate,
 		models:     models.New(db),
+		executor:   executor,
 	}
 
 	app.serve()

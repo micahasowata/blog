@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/hibiken/asynq"
 )
 
 func (app *application) routes() http.Handler {
@@ -11,4 +12,8 @@ func (app *application) routes() http.Handler {
 	app.stack(router)
 	router.Post("/v1/users/register", app.registerUser)
 	return router
+}
+
+func (app *application) jobs() asynq.Handler {
+	return nil
 }
