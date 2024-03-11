@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -21,11 +22,11 @@ func NewProduction(cfg *config.Config) (*pgxpool.Pool, error) {
 	return db, nil
 }
 
-func NewTest(cfg *config.Config) (*pgxpool.Pool, error) {
+func NewTest() (*pgxpool.Pool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	db, err := pgxpool.New(ctx, cfg.TestDSN)
+	db, err := pgxpool.New(ctx, os.Getenv("TEST_DSN"))
 	if err != nil {
 		return nil, err
 	}

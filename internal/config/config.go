@@ -11,7 +11,6 @@ type Config struct {
 	Address string
 	MaxSize int
 	ProdDSN string
-	TestDSN string
 }
 
 func New() (*Config, error) {
@@ -29,7 +28,6 @@ func New() (*Config, error) {
 		Address: os.Getenv("ADDR"),
 		MaxSize: size,
 		ProdDSN: os.Getenv("PROD_DSN"),
-		TestDSN: os.Getenv("TEST_DSN"),
 	}
 	return cfg, nil
 }
