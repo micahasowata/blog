@@ -2,9 +2,11 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/micahasowata/blog/internal/db"
+	"github.com/rs/xid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,13 +33,14 @@ func TestInsert(t *testing.T) {
 		DB: tdb,
 	}
 
-	user := &Users{
-		Name:     "Adam",
-		Username: "iamadam",
-		Email:    "adam45@gmail.com",
-	}
-
 	t.Run("valid", func(t *testing.T) {
+		user := &Users{
+			ID:       xid.New().String(),
+			Name:     "Adam",
+			Username: "iamadam",
+			Email:    "adam45@gmail.com",
+		}
+
 		createdUser, err := model.Insert(user)
 
 		require.Nil(t, err)
@@ -50,6 +53,13 @@ func TestInsert(t *testing.T) {
 	})
 
 	t.Run("duplicate username", func(t *testing.T) {
+		user := &Users{
+			ID:       xid.NewWithTime(time.Now().Add(2 * time.Hour)).String(),
+			Name:     "Adam",
+			Username: "iamadam",
+			Email:    "adam45@gmail.com",
+		}
+
 		createdUser, err := model.Insert(user)
 		require.NotNil(t, err)
 		require.Nil(t, createdUser)
@@ -58,7 +68,12 @@ func TestInsert(t *testing.T) {
 	})
 
 	t.Run("duplicate email", func(t *testing.T) {
-		user.Username = "evelyn"
+		user := &Users{
+			ID:       xid.NewWithTime(time.Now().Add(3 * time.Hour)).String(),
+			Name:     "Adam",
+			Username: "iamadamthefirst",
+			Email:    "adam45@gmail.com",
+		}
 
 		createdUser, err := model.Insert(user)
 		require.NotNil(t, err)

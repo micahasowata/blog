@@ -22,6 +22,7 @@ type Users struct {
 	Name     string    `json:"name"`
 	Username string    `json:"username"`
 	Email    string    `json:"email"`
+	Verified bool      `json:"verified"`
 }
 
 type UsersModel struct {
@@ -37,7 +38,7 @@ func (m *UsersModel) Insert(user *Users) (*Users, error) {
 	query := `
 	INSERT INTO users (id, name, username, email)
 	VALUES ($1, $2, $3, $4)
-	RETURNING id, created, updated, name, username, email`
+	RETURNING id, created, updated, name, username, email, verified`
 
 	args := []any{
 		user.ID,
@@ -68,6 +69,7 @@ func (m *UsersModel) Insert(user *Users) (*Users, error) {
 		&user.Name,
 		&user.Username,
 		&user.Email,
+		&user.Verified,
 	)
 
 	if err != nil {
