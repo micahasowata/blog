@@ -71,3 +71,23 @@ func (app *application) notFoundHandler(w http.ResponseWriter, r *http.Request) 
 
 	app.errorResponse(w, e)
 }
+
+func (app *application) badRequestHandler(w http.ResponseWriter, err error) {
+	bodyErr, ok := err.(*jason.Err)
+	if !ok {
+		app.errorResponse(w, nil)
+		return
+	}
+
+	e := &errResponse{
+		Message:     "invalid values in request body",
+		Description: bodyErr.Msg,
+		Code:        0003,
+		Response: errHTTP{
+			Message: "body contains invalid JSON values",
+			Code:    http.StatusBadRequest,
+		},
+		Cause: err,
+	}
+	app.errorResponse(w, e)
+}
