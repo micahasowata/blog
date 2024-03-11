@@ -3,7 +3,9 @@ package main
 import (
 	"net/http"
 
+	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
+	"github.com/rs/xid"
 )
 
 func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +26,20 @@ func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
 		app.validationErrHandler(w, err)
 	}
 
-	err = app.Write(w, http.StatusOK, jason.Envelope{"user": input}, nil)
+	user := &models.Users{
+		ID:       xid.New().String(),
+		Name:     input.Name,
+		Username: input.Username,
+		Email:    input.Email,
+	}
+
+	user, err = app.models.Users.Insert(user)
+	if err != nil {
+		app.duplicateUserDataHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user}, nil)
 	if err != nil {
 		app.writeErrHandler(w, err)
 		return
