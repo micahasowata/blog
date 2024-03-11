@@ -35,19 +35,8 @@ func NewTest() (*pgxpool.Pool, error) {
 }
 
 func Clean(db *pgxpool.Pool) error {
-	query := `
-	DO $$ DECLARE r RECORD;
-		BEGIN FOR r IN (
-			SELECT 
-				tablename 
-			FROM 
-				pg_tables 
-			WHERE 
-				schema_name = 'public'
-			) LOOP EXECUTE 'drop table if exists ' || quote_ident(r.tablename) || ' cascade';
-		END LOOP;
-	END $$;
-	`
+	query := `DELETE FROM users`
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
