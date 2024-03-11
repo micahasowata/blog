@@ -9,6 +9,6 @@ import (
 func (app *application) routes() http.Handler {
 	router := chi.NewRouter()
 	app.stack(router)
-	router.Get("/", nil)
+	router.Post("/v1/users/register", app.registerUser)
 	return router
 }
