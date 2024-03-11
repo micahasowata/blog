@@ -3,6 +3,6 @@ CREATE TABLE IF NOT EXISTS users (
     created timestamptz NOT NULL DEFAULT now(),
     updated timestamptz NOT NULL DEFAULT now(),
     name citext NOT NULL,
-    username citext NOT NULL,
+    username citext UNIQUE NOT NULL,
     email citext UNIQUE NOT NULL
 );
