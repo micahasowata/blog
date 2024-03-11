@@ -11,7 +11,7 @@ import (
 )
 
 func TestMethodNotAllowed(t *testing.T) {
-	r, err := http.NewRequest(http.MethodPut, "/", nil)
+	r, err := http.NewRequest(http.MethodPut, "/v1/users/register", nil)
 	require.Nil(t, err)
 
 	rr := httptest.NewRecorder()
@@ -28,7 +28,7 @@ func TestMethodNotAllowed(t *testing.T) {
 }
 
 func TestNotFound(t *testing.T) {
-	r, err := http.NewRequest(http.MethodPut, "/auth", nil)
+	r, err := http.NewRequest(http.MethodPut, "/v2", nil)
 	require.Nil(t, err)
 
 	rr := httptest.NewRecorder()
