@@ -9,7 +9,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/xid"
 )
 
 type User interface {
@@ -41,7 +40,7 @@ func (m *UsersModel) Insert(user *Users) (*Users, error) {
 	RETURNING id, created, updated, name, username, email`
 
 	args := []any{
-		xid.New().String(),
+		user.ID,
 		user.Name,
 		user.Username,
 		user.Email,
