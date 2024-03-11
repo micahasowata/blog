@@ -1,8 +1,13 @@
 package main
 
 import (
+	"errors"
 	"log"
 
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
@@ -13,9 +18,11 @@ import (
 type application struct {
 	*jason.Jason
 
-	logger *zap.Logger
-	config *config.Config
-	models *models.Models
+	logger     *zap.Logger
+	config     *config.Config
+	translator ut.Translator
+	validate   *validator.Validate
+	models     *models.Models
 }
 
 func main() {
@@ -34,11 +41,22 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	localeEN := en.New()
+	universal := ut.New(localeEN, localeEN)
+	translator, ok := universal.GetTranslator("en")
+	if !ok {
+		log.Fatal(errors.New("unable to get validation translator"))
+	}
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	en_translations.RegisterDefaultTranslations(validate, translator)
+
 	app := &application{
-		Jason:  jason.New(int64(config.MaxSize), false, true),
-		logger: logger,
-		config: config,
-		models: models.New(db),
+		Jason:      jason.New(int64(config.MaxSize), false, true),
+		logger:     logger,
+		config:     config,
+		translator: translator,
+		validate:   validate,
+		models:     models.New(db),
 	}
 
 	app.serve()
