@@ -11,21 +11,24 @@ import (
 
 func setupDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	db, err := db.NewTest()
+	tdb, err := db.NewTest()
 
 	require.Nil(t, err)
-	require.NotNil(t, db)
-	require.NotEmpty(t, db)
+	require.NotNil(t, tdb)
+	require.NotEmpty(t, tdb)
 
-	return db
+	err = db.Clean(tdb)
+	require.Nil(t, err)
+
+	return tdb
 }
 
 func TestInsert(t *testing.T) {
-	testDB := setupDB(t)
-	defer db.Clean(testDB)
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
 
 	model := &UsersModel{
-		DB: testDB,
+		DB: tdb,
 	}
 
 	user := &Users{
