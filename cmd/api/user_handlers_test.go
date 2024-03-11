@@ -60,6 +60,11 @@ func TestRegisterUser(t *testing.T) {
 			body: `{name:"addam", username:"iamadam", email:"theaddam"}`,
 			code: http.StatusOK,
 		},
+		{
+			name: "bad body",
+			body: `{password:"9L]dPa!iw8B"}`,
+			code: http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
