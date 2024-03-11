@@ -21,7 +21,7 @@ confirm:
 ## test: run all tests
 .PHONY: test
 test:
-	@go test -v -race -buildvcs -cover ./...
+	@TEST_DSN=${TEST_DSN} go test -v -race -buildvcs -cover ./...
 
 ## run: run the application
 .PHONY: run
