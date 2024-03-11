@@ -4,5 +4,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated timestamptz NOT NULL DEFAULT now(),
     name citext NOT NULL,
     username citext UNIQUE NOT NULL,
-    email citext UNIQUE NOT NULL
+    email citext UNIQUE NOT NULL,
+    verified boolean NOT NULL DEFAULT false
 );
