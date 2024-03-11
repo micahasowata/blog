@@ -8,6 +8,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/micahasowata/jason v1.0.1
 	github.com/pseidemann/finish v1.2.0
+	github.com/rs/xid v1.5.0
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.27.0
 )
