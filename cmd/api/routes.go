@@ -11,6 +11,7 @@ func (app *application) routes() http.Handler {
 	router := chi.NewRouter()
 	app.stack(router)
 	router.Post("/v1/users/register", app.registerUser)
+	router.Post("/v1/users/verify", app.verifyEmail)
 	return router
 }
 
