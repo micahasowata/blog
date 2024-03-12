@@ -50,7 +50,7 @@ func (app *application) handleWelcomeEmailDelivery(ctx context.Context, t *asynq
 
 	message.Subject("👋🏼 Welcome to Blog 👋🏼")
 
-	err = message.SetBodyHTMLTemplate(templates.Parse("welcome_email"), &payload)
+	err = message.SetBodyHTMLTemplate(templates.Parse("welcome"), &payload)
 	if err != nil {
 		return err
 	}
@@ -63,10 +63,12 @@ func (app *application) handleWelcomeEmailDelivery(ctx context.Context, t *asynq
 		return err
 	}
 
+	defer client.Close()
+
 	err = client.DialAndSendWithContext(ctx, message)
 	if err != nil {
 		return err
 	}
 
-	return client.Close()
+	return nil
 }
