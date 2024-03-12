@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/hibiken/asynq"
+	"github.com/joho/godotenv"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
@@ -29,6 +30,11 @@ type application struct {
 
 func main() {
 	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
