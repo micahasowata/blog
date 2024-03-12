@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/rs/xid"
 	"github.com/stretchr/testify/assert"
@@ -13,7 +14,11 @@ import (
 
 func setupDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	tdb, err := db.NewTest()
+
+	cfg, err := config.New()
+	require.Nil(t, err)
+
+	tdb, err := db.NewTest(cfg)
 
 	require.Nil(t, err)
 	require.NotNil(t, tdb)
