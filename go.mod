@@ -3,6 +3,7 @@ module github.com/micahasowata/blog
 go 1.22.0
 
 require (
+	github.com/dchest/uniuri v1.2.0
 	github.com/gavv/httpexpect/v2 v2.16.0
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-playground/locales v0.14.1
@@ -14,6 +15,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/micahasowata/jason v1.0.1
 	github.com/pseidemann/finish v1.2.0
+	github.com/redis/go-redis/v9 v9.0.3
 	github.com/rs/xid v1.5.0
 	github.com/stretchr/testify v1.8.4
 	github.com/wneessen/go-mail v0.4.1
@@ -48,7 +50,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/redis/go-redis/v9 v9.0.3 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect

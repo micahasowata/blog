@@ -14,6 +14,7 @@ import (
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -25,6 +26,7 @@ type application struct {
 	translator ut.Translator
 	validate   *validator.Validate
 	models     *models.Models
+	rclient    *redis.Client
 	executor   *asynq.Client
 }
 
@@ -59,7 +61,11 @@ func main() {
 	en_translations.RegisterDefaultTranslations(validate, translator)
 
 	executor := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: config.AsynqRDC,
+		Addr: config.RDB,
+	})
+
+	rclient := redis.NewClient(&redis.Options{
+		Addr: config.RDB,
 	})
 
 	app := &application{
@@ -69,6 +75,7 @@ func main() {
 		translator: translator,
 		validate:   validate,
 		models:     models.New(db),
+		rclient:    rclient,
 		executor:   executor,
 	}
 
