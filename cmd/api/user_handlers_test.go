@@ -10,6 +10,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
@@ -48,6 +49,10 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	en_translations.RegisterDefaultTranslations(validate, translator)
 
+	executor := asynq.NewClient(asynq.RedisClientOpt{
+		Addr: cfg.AsynqRDC,
+	})
+
 	app := &application{
 		Jason:      jason.New(int64(cfg.MaxSize), false, true),
 		logger:     zap.NewExample(),
@@ -55,6 +60,7 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 		validate:   validate,
 		translator: translator,
 		models:     models.New(db),
+		executor:   executor,
 	}
 
 	return app
