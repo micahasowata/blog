@@ -22,7 +22,7 @@ func TestHandleWelcomeEmailDelivery(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	task, err := app.newWelcomeEmailTask("iamadam", "adam45@gmail.com")
+	task, err := app.newWelcomeEmailTask("addam", "adam45@gmail.com")
 	require.Nil(t, err)
 
 	err = app.handleWelcomeEmailDelivery(ctx, task)
