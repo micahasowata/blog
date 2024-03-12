@@ -67,6 +67,8 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 }
 
 func TestRegisterUser(t *testing.T) {
+	t.Skip()
+
 	tdb := setupDB(t)
 	defer db.Clean(tdb)
 

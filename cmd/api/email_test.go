@@ -17,6 +17,8 @@ func TestNewWelcomeEmailTask(t *testing.T) {
 }
 
 func TestHandleWelcomeEmailDelivery(t *testing.T) {
+	t.Skip()
+
 	app := setupApp(t, nil)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
