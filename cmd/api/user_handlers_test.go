@@ -16,6 +16,7 @@ import (
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
@@ -51,6 +52,10 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 		Addr: cfg.RDB,
 	})
 
+	rclient := redis.NewClient(&redis.Options{
+		Addr: cfg.RDB,
+	})
+
 	app := &application{
 		Jason:      jason.New(int64(cfg.MaxSize), false, true),
 		logger:     zap.NewExample(),
@@ -59,14 +64,13 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 		translator: translator,
 		models:     models.New(db),
 		executor:   executor,
+		rclient:    rclient,
 	}
 
 	return app
 }
 
 func TestRegisterUser(t *testing.T) {
-	t.Skip()
-
 	tdb := setupDB(t)
 	defer db.Clean(tdb)
 

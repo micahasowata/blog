@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
@@ -33,7 +34,15 @@ func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
 		Email:    input.Email,
 	}
 
-	task, err := app.newWelcomeEmailTask(user.Name, user.Email)
+	token := app.newToken()
+
+	err = app.rclient.Set(r.Context(), token, user.Email, 5*time.Hour).Err()
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	task, err := app.newWelcomeEmailTask(user.Name, token, user.Email)
 	if err != nil {
 		app.serverErrorHandler(w, err)
 		return

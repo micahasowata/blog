@@ -14,13 +14,14 @@ const (
 )
 
 type welcomeEmailPayload struct {
-	Name string
-	To   string
-	From string
+	Name  string
+	To    string
+	Token string
+	From  string
 }
 
-func (app *application) newWelcomeEmailTask(name, to string) (*asynq.Task, error) {
-	payload, err := jsoniter.Marshal(welcomeEmailPayload{Name: name, To: to, From: app.config.From})
+func (app *application) newWelcomeEmailTask(name, token, to string) (*asynq.Task, error) {
+	payload, err := jsoniter.Marshal(welcomeEmailPayload{Name: name, To: to, Token: token, From: app.config.From})
 	if err != nil {
 		return nil, err
 	}
