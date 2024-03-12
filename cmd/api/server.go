@@ -29,7 +29,9 @@ func (app *application) serve() {
 
 	processor := asynq.NewServer(rdc, cfg)
 	err := processor.Start(app.jobs())
-	app.logger.Fatal("asynq server error", zap.Error(err))
+	if err != nil {
+		app.logger.Fatal("asynq server error", zap.Error(err))
+	}
 
 	manager := finish.New()
 	manager.Log = app.logger.Sugar()
