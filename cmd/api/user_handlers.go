@@ -33,6 +33,18 @@ func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
 		Email:    input.Email,
 	}
 
+	task, err := app.newWelcomeEmailTask(user.Name, user.Email)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	_, err = app.executor.EnqueueContext(r.Context(), task)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
 	user, err = app.models.Users.Insert(user)
 	if err != nil {
 		app.duplicateUserDataHandler(w, err)
