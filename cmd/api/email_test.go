@@ -16,7 +16,10 @@ func setUpToken(t *testing.T, app *application, user *models.Users) string {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	err := app.rclient.Set(ctx, token, user.Email, 5*time.Hour).Err()
+	err := app.rclient.FlushAll(ctx).Err()
+	require.Nil(t, err)
+
+	err = app.rclient.Set(ctx, token, user.Email, 5*time.Hour).Err()
 	require.Nil(t, err)
 
 	return token
