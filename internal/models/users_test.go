@@ -87,3 +87,42 @@ func TestInsert(t *testing.T) {
 		assert.EqualError(t, err, ErrDuplicateEmail.Error())
 	})
 }
+
+func TestVerifyEmail(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
+
+	model := &UsersModel{
+		DB: tdb,
+	}
+
+	user := &Users{
+		ID:       xid.New().String(),
+		Name:     "Adam",
+		Username: "iamadam",
+		Email:    "adam45@gmail.com",
+	}
+
+	createdUser, err := model.Insert(user)
+	require.Nil(t, err)
+	require.NotNil(t, createdUser)
+	require.NotEmpty(t, createdUser)
+
+	assert.Empty(t, createdUser.Verified)
+
+	t.Run("valid", func(t *testing.T) {
+		user, err := model.VerifyEmail(createdUser.ID)
+		require.Nil(t, err)
+		require.NotNil(t, user)
+
+		require.NotEmpty(t, user.Verified)
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		user, err := model.VerifyEmail(xid.New().String())
+		require.NotNil(t, err)
+		require.Nil(t, user)
+
+		assert.EqualError(t, err, ErrUserNotFound.Error())
+	})
+}

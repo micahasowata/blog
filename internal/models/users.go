@@ -13,6 +13,7 @@ import (
 
 type User interface {
 	Insert(*Users) (*Users, error)
+	VerifyEmail(string) (*Users, error)
 }
 
 type Users struct {
@@ -32,6 +33,7 @@ type UsersModel struct {
 var (
 	ErrDuplicateUsername = errors.New("duplicate username")
 	ErrDuplicateEmail    = errors.New("duplicate email")
+	ErrUserNotFound      = errors.New("user not found")
 )
 
 func (m *UsersModel) Insert(user *Users) (*Users, error) {
@@ -83,6 +85,57 @@ func (m *UsersModel) Insert(user *Users) (*Users, error) {
 			default:
 				return nil, err
 			}
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (m *UsersModel) VerifyEmail(id string) (*Users, error) {
+	query := `
+	UPDATE users 
+	SET verified = true, updated = now()
+	WHERE id = $1
+	RETURNING id, created, updated, name, username, email, verified`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	tx, err := m.DB.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel:       pgx.Serializable,
+		AccessMode:     pgx.ReadWrite,
+		DeferrableMode: pgx.NotDeferrable,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback(ctx)
+
+	user := &Users{}
+
+	err = tx.QueryRow(ctx, query, id).Scan(
+		&user.ID,
+		&user.Created,
+		&user.Updated,
+		&user.Name,
+		&user.Username,
+		&user.Email,
+		&user.Verified,
+	)
+
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "no rows in result set"):
+			return nil, ErrUserNotFound
+		default:
+			return nil, err
 		}
 	}
 
