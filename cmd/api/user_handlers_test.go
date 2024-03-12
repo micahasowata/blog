@@ -22,7 +22,10 @@ import (
 func setupDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 
-	tdb, err := db.NewTest()
+	cfg, err := config.New()
+	require.Nil(t, err)
+
+	tdb, err := db.NewTest(cfg)
 	require.Nil(t, err)
 
 	return tdb
@@ -31,14 +34,17 @@ func setupDB(t *testing.T) *pgxpool.Pool {
 func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 	t.Helper()
 
-	cfg := &config.Config{
-		MaxSize: 1_048_576,
-	}
+	cfg, err := config.New()
+	require.Nil(t, err)
+
+	t.Log(cfg)
 
 	localeEN := en.New()
 	universal := ut.New(localeEN, localeEN)
+
 	translator, ok := universal.GetTranslator("en")
 	require.NotEmpty(t, ok)
+
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	en_translations.RegisterDefaultTranslations(validate, translator)
 
