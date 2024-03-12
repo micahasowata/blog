@@ -15,5 +15,7 @@ func (app *application) routes() http.Handler {
 }
 
 func (app *application) jobs() asynq.Handler {
-	return nil
+	mux := asynq.NewServeMux()
+	mux.HandleFunc(typeWelcomeEmail, app.handleWelcomeEmailDelivery)
+	return mux
 }
