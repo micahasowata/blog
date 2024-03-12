@@ -10,7 +10,7 @@ type Config struct {
 	MaxSize      int
 	ProdDSN      string
 	TestDSN      string
-	AsynqRDC     string
+	RDB          string
 	From         string
 	SMTPHost     string
 	SMTPPort     int
@@ -34,7 +34,7 @@ func New() (*Config, error) {
 		MaxSize:      size,
 		ProdDSN:      os.Getenv("PROD_DSN"),
 		TestDSN:      os.Getenv("TEST_DSN"),
-		AsynqRDC:     os.Getenv("ASYNQ_RDC"),
+		RDB:          os.Getenv("RDB"),
 		From:         os.Getenv("FROM"),
 		SMTPHost:     os.Getenv("SMTP_HOST"),
 		SMTPPort:     port,

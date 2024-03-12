@@ -20,7 +20,7 @@ func (app *application) serve() {
 	}
 
 	rdc := asynq.RedisClientOpt{
-		Addr: app.config.AsynqRDC,
+		Addr: app.config.RDB,
 	}
 	cfg := asynq.Config{
 		Logger:      app.logger.Sugar(),

@@ -38,8 +38,6 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 	cfg, err := config.New()
 	require.Nil(t, err)
 
-	t.Log(cfg)
-
 	localeEN := en.New()
 	universal := ut.New(localeEN, localeEN)
 
@@ -50,7 +48,7 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 	en_translations.RegisterDefaultTranslations(validate, translator)
 
 	executor := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: cfg.AsynqRDC,
+		Addr: cfg.RDB,
 	})
 
 	app := &application{
