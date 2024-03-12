@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,4 +30,16 @@ func TestFormatValidationErr(t *testing.T) {
 
 		require.Empty(t, mapOfErrs)
 	})
+}
+
+func TestNewToken(t *testing.T) {
+	app := setupApp(t, nil)
+
+	token := app.newToken()
+
+	assert.Equal(t, len(token), 6)
+
+	secondToken := app.newToken()
+
+	assert.NotEqual(t, token, secondToken)
 }

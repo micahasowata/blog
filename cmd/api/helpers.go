@@ -3,6 +3,7 @@ package main
 import (
 	"strings"
 
+	"github.com/dchest/uniuri"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -19,4 +20,8 @@ func (app *application) formatValidationErr(err error) (map[string]string, error
 	}
 
 	return errs, nil
+}
+
+func (app *application) newToken() string {
+	return uniuri.NewLenChars(6, []byte("01234567890"))
 }
