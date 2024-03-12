@@ -156,3 +156,14 @@ func TestDuplicateUserDataHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestInvalidTokenHandler(t *testing.T) {
+	app := setupApp(t, nil)
+
+	rr := httptest.NewRecorder()
+
+	app.invalidTokenHandler(rr, errors.New("token not found"))
+
+	rs := rr.Result()
+	assert.Equal(t, http.StatusForbidden, rs.StatusCode)
+}
