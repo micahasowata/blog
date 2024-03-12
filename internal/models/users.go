@@ -96,11 +96,11 @@ func (m *UsersModel) Insert(user *Users) (*Users, error) {
 	return user, nil
 }
 
-func (m *UsersModel) VerifyEmail(id string) (*Users, error) {
+func (m *UsersModel) VerifyEmail(email string) (*Users, error) {
 	query := `
 	UPDATE users 
 	SET verified = true, updated = now()
-	WHERE id = $1
+	WHERE email = $1
 	RETURNING id, created, updated, name, username, email, verified`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -120,7 +120,7 @@ func (m *UsersModel) VerifyEmail(id string) (*Users, error) {
 
 	user := &Users{}
 
-	err = tx.QueryRow(ctx, query, id).Scan(
+	err = tx.QueryRow(ctx, query, email).Scan(
 		&user.ID,
 		&user.Created,
 		&user.Updated,

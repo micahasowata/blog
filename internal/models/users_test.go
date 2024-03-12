@@ -111,7 +111,7 @@ func TestVerifyEmail(t *testing.T) {
 	assert.Empty(t, createdUser.Verified)
 
 	t.Run("valid", func(t *testing.T) {
-		user, err := model.VerifyEmail(createdUser.ID)
+		user, err := model.VerifyEmail(createdUser.Email)
 		require.Nil(t, err)
 		require.NotNil(t, user)
 
