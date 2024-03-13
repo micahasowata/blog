@@ -18,7 +18,7 @@ type errResponse struct {
 }
 
 func (app *application) errorResponse(w http.ResponseWriter, e *errResponse) {
-	if e.Code == http.StatusInternalServerError && e.Cause != nil {
+	if e.Cause != nil {
 		app.logger.Error(e.Cause.Error())
 	}
 
@@ -124,6 +124,15 @@ func (app *application) invalidTokenHandler(w http.ResponseWriter, err error) {
 	e := &errResponse{
 		Code:    http.StatusForbidden,
 		Message: "invalid token",
+		Cause:   err,
+	}
+	app.errorResponse(w, e)
+}
+
+func (app *application) resourceNotFoundHandler(w http.ResponseWriter, err error) {
+	e := &errResponse{
+		Code:    http.StatusNotFound,
+		Message: "resource not found",
 		Cause:   err,
 	}
 
