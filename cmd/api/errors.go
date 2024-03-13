@@ -24,7 +24,7 @@ func (app *application) errorResponse(w http.ResponseWriter, e *errResponse) {
 
 	err := app.Write(w, e.Code, jason.Envelope{"error": e}, nil)
 	if err != nil {
-		w.WriteHeader(e.Code)
+		app.writeErrHandler(w, err)
 		return
 	}
 }
