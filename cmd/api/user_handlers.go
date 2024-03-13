@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/micahasowata/blog/internal/models"
@@ -42,7 +44,15 @@ func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := app.newWelcomeEmailTask(user.Name, token, user.Email)
+	payload := otpEmailPayload{
+		Subject: fmt.Sprintf("%s, welcome to Blog", strings.ToLower(user.Name)),
+		Name:    user.Name,
+		To:      user.Email,
+		Token:   token,
+		Kind:    "welcome",
+	}
+
+	task, err := app.newOTPEmailTask(payload)
 	if err != nil {
 		app.serverErrorHandler(w, err)
 		return
