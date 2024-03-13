@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -36,7 +37,15 @@ func TestNewWelcomeEmailTask(t *testing.T) {
 
 	token := setUpToken(t, app, user)
 
-	task, err := app.newWelcomeEmailTask("iamadam", token, "adam45@gmail.com")
+	payload := otpEmailPayload{
+		Subject: fmt.Sprintf("%s, welcome to Blog", user.Name),
+		Name:    user.Name,
+		To:      user.Email,
+		Token:   token,
+		Kind:    "welcome",
+	}
+
+	task, err := app.newOTPEmailTask(payload)
 	require.Nil(t, err)
 	require.NotNil(t, task)
 }
@@ -55,10 +64,18 @@ func TestHandleWelcomeEmailDelivery(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	task, err := app.newWelcomeEmailTask("addam", token, "adam45@gmail.com")
+	payload := otpEmailPayload{
+		Subject: fmt.Sprintf("%s, welcome to Blog", user.Name),
+		Name:    user.Name,
+		To:      user.Email,
+		Token:   token,
+		Kind:    "welcome",
+	}
+
+	task, err := app.newOTPEmailTask(payload)
 	require.Nil(t, err)
 
-	err = app.handleWelcomeEmailDelivery(ctx, task)
+	err = app.handleOTPEmailDelivery(ctx, task)
 	require.Nil(t, err)
 
 }

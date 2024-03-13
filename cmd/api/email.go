@@ -10,27 +10,28 @@ import (
 )
 
 const (
-	typeWelcomeEmail = "email:welcome"
+	typeOTPEmail = "email:otp"
 )
 
-type welcomeEmailPayload struct {
-	Name  string
-	To    string
-	Token string
-	From  string
+type otpEmailPayload struct {
+	Subject string
+	Name    string
+	To      string
+	Token   string
+	Kind    string
 }
 
-func (app *application) newWelcomeEmailTask(name, token, to string) (*asynq.Task, error) {
-	payload, err := jsoniter.Marshal(welcomeEmailPayload{Name: name, To: to, Token: token, From: app.config.From})
+func (app *application) newOTPEmailTask(payload otpEmailPayload) (*asynq.Task, error) {
+	p, err := jsoniter.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	return asynq.NewTask(typeWelcomeEmail, payload, asynq.MaxRetry(3)), nil
+	return asynq.NewTask(typeOTPEmail, p, asynq.MaxRetry(3)), nil
 }
 
-func (app *application) handleWelcomeEmailDelivery(ctx context.Context, t *asynq.Task) error {
-	payload := welcomeEmailPayload{}
+func (app *application) handleOTPEmailDelivery(ctx context.Context, t *asynq.Task) error {
+	payload := otpEmailPayload{}
 
 	err := jsoniter.Unmarshal(t.Payload(), &payload)
 	if err != nil {
@@ -39,7 +40,7 @@ func (app *application) handleWelcomeEmailDelivery(ctx context.Context, t *asynq
 
 	message := mail.NewMsg()
 
-	err = message.From(payload.From)
+	err = message.From(app.config.From)
 	if err != nil {
 		return err
 	}
@@ -49,9 +50,9 @@ func (app *application) handleWelcomeEmailDelivery(ctx context.Context, t *asynq
 		return err
 	}
 
-	message.Subject("👋🏼 Welcome to Blog 👋🏼")
+	message.Subject(payload.Subject)
 
-	err = message.SetBodyHTMLTemplate(templates.Parse("welcome"), &payload)
+	err = message.SetBodyHTMLTemplate(templates.Parse(payload.Kind), &payload)
 	if err != nil {
 		return err
 	}
