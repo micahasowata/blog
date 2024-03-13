@@ -14,6 +14,7 @@ import (
 type User interface {
 	Insert(*Users) (*Users, error)
 	VerifyEmail(string) (*Users, error)
+	GetByEmail(string) (*Users, error)
 }
 
 type Users struct {
@@ -109,6 +110,56 @@ func (m *UsersModel) VerifyEmail(email string) (*Users, error) {
 	tx, err := m.DB.BeginTx(ctx, pgx.TxOptions{
 		IsoLevel:       pgx.Serializable,
 		AccessMode:     pgx.ReadWrite,
+		DeferrableMode: pgx.NotDeferrable,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback(ctx)
+
+	user := &Users{}
+
+	err = tx.QueryRow(ctx, query, email).Scan(
+		&user.ID,
+		&user.Created,
+		&user.Updated,
+		&user.Name,
+		&user.Username,
+		&user.Email,
+		&user.Verified,
+	)
+
+	if err != nil {
+		switch {
+		case strings.Contains(err.Error(), "no rows in result set"):
+			return nil, ErrUserNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (m *UsersModel) GetByEmail(email string) (*Users, error) {
+	query := `
+	SELECT id, created, updated, name, username, email, verified
+	FROM users
+	WHERE email = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	tx, err := m.DB.BeginTx(ctx, pgx.TxOptions{
+		IsoLevel:       pgx.Serializable,
+		AccessMode:     pgx.ReadOnly,
 		DeferrableMode: pgx.NotDeferrable,
 	})
 

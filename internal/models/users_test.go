@@ -126,3 +126,41 @@ func TestVerifyEmail(t *testing.T) {
 		assert.EqualError(t, err, ErrUserNotFound.Error())
 	})
 }
+
+func TestGetByEmail(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
+
+	model := &UsersModel{
+		DB: tdb,
+	}
+
+	user := &Users{
+		ID:       xid.New().String(),
+		Name:     "Adam",
+		Username: "iamadam",
+		Email:    "adam45@gmail.com",
+	}
+
+	createdUser, err := model.Insert(user)
+	require.Nil(t, err)
+	require.NotNil(t, createdUser)
+	require.NotEmpty(t, createdUser)
+
+	t.Run("valid", func(t *testing.T) {
+		userFromDB, err := model.GetByEmail(createdUser.Email)
+		require.Nil(t, err)
+		require.NotNil(t, userFromDB)
+		require.NotEmpty(t, userFromDB)
+
+		assert.Equal(t, createdUser, userFromDB)
+	})
+
+	t.Run("invalid", func(t *testing.T) {
+		userFromDB, err := model.GetByEmail("saywarawara@gmail.com")
+		require.NotNil(t, err)
+		require.Nil(t, userFromDB)
+
+		assert.EqualError(t, err, ErrUserNotFound.Error())
+	})
+}
