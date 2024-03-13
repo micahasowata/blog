@@ -12,11 +12,12 @@ func (app *application) routes() http.Handler {
 	app.stack(router)
 	router.Post("/v1/users/register", app.registerUser)
 	router.Post("/v1/users/verify", app.verifyEmail)
+	router.Post("/v1/tokens/login", app.createLoginToken)
 	return router
 }
 
 func (app *application) jobs() asynq.Handler {
 	mux := asynq.NewServeMux()
-	mux.HandleFunc(typeWelcomeEmail, app.handleWelcomeEmailDelivery)
+	mux.HandleFunc(typeOTPEmail, app.handleOTPEmailDelivery)
 	return mux
 }
