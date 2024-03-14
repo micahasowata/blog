@@ -138,8 +138,8 @@ func TestGetByEmail(t *testing.T) {
 	user := &Users{
 		ID:       xid.New().String(),
 		Name:     "Adam",
-		Username: "iamadam",
-		Email:    "adam45@gmail.com",
+		Username: "iamadam47",
+		Email:    "adam459@gmail.com",
 	}
 
 	createdUser, err := model.Insert(user)
@@ -201,4 +201,98 @@ func TestGetByID(t *testing.T) {
 
 		assert.EqualError(t, err, ErrUserNotFound.Error())
 	})
+}
+
+func TestUpdateUser(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
+
+	model := &UsersModel{
+		DB: tdb,
+	}
+
+	user := &Users{
+		ID:       xid.New().String(),
+		Name:     "Adam",
+		Username: "iamadam",
+		Email:    "adam45@gmail.com",
+	}
+
+	createdUser, err := model.Insert(user)
+	require.Nil(t, err)
+
+	user = &Users{
+		ID:       xid.New().String(),
+		Name:     "Jimmy",
+		Username: "iamjim",
+		Email:    "olaoluwa567@gmail.com",
+	}
+
+	secondUser, err := model.Insert(user)
+	require.Nil(t, err)
+
+	tests := []struct {
+		name           string
+		user           *Users
+		shouldCauseErr bool
+		err            error
+	}{
+		{
+			name: "valid",
+			user: &Users{
+				ID:       createdUser.ID,
+				Name:     "Victor",
+				Username: createdUser.Username,
+				Email:    createdUser.Email,
+			},
+			shouldCauseErr: false,
+		},
+		{
+			name: "missing user",
+			user: &Users{
+				ID:       xid.New().String(),
+				Name:     createdUser.Name,
+				Username: createdUser.Username,
+				Email:    "victor35@gmail.com",
+			},
+			shouldCauseErr: true,
+			err:            ErrUserNotFound,
+		},
+		{
+			name: "duplicate username",
+			user: &Users{
+				ID:       secondUser.ID,
+				Name:     createdUser.Name,
+				Username: createdUser.Username,
+				Email:    "victor35@gmail.com",
+			},
+			shouldCauseErr: true,
+			err:            ErrDuplicateUsername,
+		},
+		{
+			name: "duplicate email",
+			user: &Users{
+				ID:       secondUser.ID,
+				Name:     createdUser.Name,
+				Username: "victortheGreat",
+				Email:    createdUser.Email,
+			},
+			shouldCauseErr: true,
+			err:            ErrDuplicateEmail,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u, err := model.Update(tt.user)
+			if tt.shouldCauseErr {
+				require.NotNil(t, err)
+				assert.EqualError(t, err, tt.err.Error())
+				assert.Nil(t, u)
+			} else {
+				require.Nil(t, err)
+				require.NotNil(t, u)
+			}
+		})
+	}
 }
