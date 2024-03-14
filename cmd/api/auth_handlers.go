@@ -42,11 +42,15 @@ func (app *application) verifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Verified {
-		app.invalidTokenHandler(w, models.ErrUserNotFound)
-
 		err := app.rclient.Del(r.Context(), input.Token).Err()
 		if err != nil {
 			app.serverErrorHandler(w, err)
+			return
+		}
+
+		err = app.Write(w, http.StatusOK, jason.Envelope{"user": user}, nil)
+		if err != nil {
+			app.writeErrHandler(w, err)
 			return
 		}
 
