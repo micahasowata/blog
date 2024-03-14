@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -9,6 +11,7 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kataras/jwt"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
@@ -53,6 +56,11 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 		Addr: cfg.RDB,
 	})
 
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	blocklist := jwt.NewBlocklistContext(ctx, 1*time.Hour)
+
 	app := &application{
 		Jason:      jason.New(int64(cfg.MaxSize), false, true),
 		logger:     zap.NewExample(),
@@ -62,6 +70,7 @@ func setupApp(t *testing.T, db *pgxpool.Pool) *application {
 		models:     models.New(db),
 		executor:   executor,
 		rclient:    rclient,
+		blocklist:  blocklist,
 	}
 
 	return app

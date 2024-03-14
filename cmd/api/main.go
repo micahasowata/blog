@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
+	"time"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -10,6 +12,7 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/hibiken/asynq"
 	"github.com/joho/godotenv"
+	"github.com/kataras/jwt"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
@@ -28,6 +31,7 @@ type application struct {
 	models     *models.Models
 	rclient    *redis.Client
 	executor   *asynq.Client
+	blocklist  *jwt.Blocklist
 }
 
 func main() {
@@ -68,6 +72,8 @@ func main() {
 		Addr: config.RDB,
 	})
 
+	blocklist := jwt.NewBlocklistContext(context.Background(), 1*time.Hour)
+
 	app := &application{
 		Jason:      jason.New(int64(config.MaxSize), false, true),
 		logger:     logger,
@@ -77,6 +83,7 @@ func main() {
 		models:     models.New(db),
 		rclient:    rclient,
 		executor:   executor,
+		blocklist:  blocklist,
 	}
 
 	app.serve()
