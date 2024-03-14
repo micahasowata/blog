@@ -191,13 +191,24 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessToken, err := app.newAccessToken(&tokenClaims{ID: user.ID, StdClaims: nil})
+	accessToken, err := app.newAccessToken(&tokenClaims{ID: user.ID})
 	if err != nil {
 		app.serverErrorHandler(w, err)
 		return
 	}
 
-	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user, "access_token": accessToken}, nil)
+	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: user.ID})
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	pair := map[string]string{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user, "token_pair": pair}, nil)
 	if err != nil {
 		app.writeErrHandler(w, err)
 		return
@@ -211,21 +222,69 @@ func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	blocklist := jwt.NewBlocklistContext(r.Context(), 1*time.Hour)
-
-	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), blocklist)
+	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), app.blocklist)
 	if err != nil {
 		app.serverErrorHandler(w, err)
 		return
 	}
 
-	err = blocklist.InvalidateToken(verifiedToken.Token, verifiedToken.StandardClaims)
+	err = app.blocklist.InvalidateToken(verifiedToken.Token, verifiedToken.StandardClaims)
 	if err != nil {
 		app.serverErrorHandler(w, err)
 		return
 	}
 
 	err = app.Write(w, http.StatusOK, jason.Envelope{"user": "logged out successfully"}, nil)
+	if err != nil {
+		app.writeErrHandler(w, err)
+		return
+	}
+}
+
+func (app *application) refreshToken(w http.ResponseWriter, r *http.Request) {
+	token, ok := r.Context().Value(userToken).(string)
+	if !ok {
+		app.serverErrorHandler(w, errors.New("tampered token"))
+		return
+	}
+
+	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), app.blocklist)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	claims := &tokenClaims{}
+	err = verifiedToken.Claims(&claims)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	accessToken, err := app.newAccessToken(&tokenClaims{ID: claims.ID})
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: claims.ID})
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	pair := map[string]string{
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+	}
+
+	err = app.blocklist.InvalidateToken(verifiedToken.Token, verifiedToken.StandardClaims)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"token_pair": pair}, nil)
 	if err != nil {
 		app.writeErrHandler(w, err)
 		return
