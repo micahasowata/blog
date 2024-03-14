@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kataras/jwt"
 	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
 )
@@ -196,15 +197,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: user.ID, StdClaims: nil})
-	if err != nil {
-		app.serverErrorHandler(w, err)
-		return
-	}
-
-	pair := app.newTokenPair(accessToken, refreshToken)
-
-	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user, "token_pair": pair}, nil)
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user, "access_token": accessToken}, nil)
 	if err != nil {
 		app.writeErrHandler(w, err)
 		return
@@ -212,5 +205,29 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+	token, ok := r.Context().Value(userToken).(string)
+	if !ok {
+		app.serverErrorHandler(w, errors.New("tampered token"))
+		return
+	}
 
+	blocklist := jwt.NewBlocklistContext(r.Context(), 1*time.Hour)
+
+	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), blocklist)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = blocklist.InvalidateToken(verifiedToken.Token, verifiedToken.StandardClaims)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": "logged out successfully"}, nil)
+	if err != nil {
+		app.writeErrHandler(w, err)
+		return
+	}
 }

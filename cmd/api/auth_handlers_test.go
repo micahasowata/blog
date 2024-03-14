@@ -235,5 +235,35 @@ func TestLoginUser(t *testing.T) {
 }
 
 func TestLogoutUser(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
 
+	app := setupApp(t, tdb)
+
+	user := &models.Users{
+		ID:       xid.New().String(),
+		Name:     "addam",
+		Username: "iamaddam",
+		Email:    "addam@gmail.com",
+	}
+
+	createdUser, err := app.models.Users.Insert(user)
+	require.Nil(t, err)
+
+	accessToken, err := app.newAccessToken(&tokenClaims{
+		ID: createdUser.ID,
+	})
+
+	require.Nil(t, err)
+
+	server := httptest.NewServer(app.routes())
+	defer server.Close()
+
+	req := httpexpect.Default(t, server.URL)
+
+	req.POST("/v1/users/logout").
+		WithHeader(jason.ContentType, jason.ContentTypeJSON).
+		WithHeader("Authorization", "Bearer "+accessToken).
+		Expect().
+		Status(http.StatusOK)
 }
