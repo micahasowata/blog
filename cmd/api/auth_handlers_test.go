@@ -185,10 +185,10 @@ func TestLoginUser(t *testing.T) {
 		Email:    "addam@gmail.com",
 	}
 
-	_, err := app.models.Users.Insert(user)
+	createdUser, err := app.models.Users.Insert(user)
 	require.Nil(t, err)
 
-	token := setUpToken(t, app, user)
+	token := setUpToken(t, app, createdUser)
 	body := fmt.Sprintf(`{"token":"%s"}`, token)
 
 	tests := []struct {
@@ -232,4 +232,8 @@ func TestLoginUser(t *testing.T) {
 				Status(tt.code)
 		})
 	}
+}
+
+func TestLogoutUser(t *testing.T) {
+
 }

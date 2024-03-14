@@ -190,20 +190,27 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims := &tokenClaims{
-		ID:        user.ID,
-		StdClaims: nil,
-	}
-
-	pair, err := app.newTokenPair(claims)
+	accessToken, err := app.newAccessToken(&tokenClaims{ID: user.ID, StdClaims: nil})
 	if err != nil {
 		app.serverErrorHandler(w, err)
 		return
 	}
+
+	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: user.ID, StdClaims: nil})
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	pair := app.newTokenPair(accessToken, refreshToken)
 
 	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user, "token_pair": pair}, nil)
 	if err != nil {
 		app.writeErrHandler(w, err)
 		return
 	}
+}
+
+func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
+
 }
