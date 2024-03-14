@@ -14,6 +14,7 @@ func (app *application) routes() http.Handler {
 	router.Post("/v1/users/verify", app.verifyEmail)
 	router.Post("/v1/tokens/login", app.createLoginToken)
 	router.Post("/v1/users/login", app.loginUser)
+	router.With(app.requireAccessToken).Post("/v1/users/logout", app.logoutUser)
 	return router
 }
 
