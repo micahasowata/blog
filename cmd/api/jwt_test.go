@@ -54,21 +54,17 @@ func TestVerifyToken(t *testing.T) {
 }
 
 func TestNewTokenPair(t *testing.T) {
-	claims := &tokenClaims{
-		ID: xid.New().String(),
-	}
 
 	app := setupApp(t, nil)
 
-	access, err := app.newAccessToken(claims)
+	accessToken, err := app.newAccessToken(&tokenClaims{ID: xid.New().String(), StdClaims: nil})
 	require.Nil(t, err)
 
-	refresh, err := app.newRefreshToken(claims)
+	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: xid.New().String(), StdClaims: nil})
 	require.Nil(t, err)
 
-	pair, err := app.newTokenPair(claims)
-	require.Nil(t, err)
+	pair := app.newTokenPair(accessToken, refreshToken)
 
-	assert.Equal(t, pair.Access, access)
-	assert.Equal(t, pair.Refresh, refresh)
+	assert.Equal(t, pair.Access, accessToken)
+	assert.Equal(t, pair.Refresh, refreshToken)
 }

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/kataras/jwt"
+	"github.com/rs/xid"
 )
 
 type tokenClaims struct {
@@ -14,6 +15,8 @@ type tokenClaims struct {
 func (app *application) newAccessToken(claims *tokenClaims) (string, error) {
 	if claims.StdClaims == nil {
 		claims.StdClaims = &jwt.Claims{
+			ID:        xid.New().String(),
+			OriginID:  xid.New().String()[0:7] + xid.New().String(),
 			NotBefore: time.Now().Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Expiry:    time.Now().Add(3 * time.Hour).Unix(),
@@ -34,6 +37,8 @@ func (app *application) newAccessToken(claims *tokenClaims) (string, error) {
 func (app *application) newRefreshToken(claims *tokenClaims) (string, error) {
 	if claims.StdClaims == nil {
 		claims.StdClaims = &jwt.Claims{
+			ID:        xid.New().String(),
+			OriginID:  xid.New().String()[0:7] + xid.New().String(),
 			NotBefore: time.Now().Unix(),
 			IssuedAt:  time.Now().Unix(),
 			Expiry:    time.Now().Add(3 * time.Hour).Unix(),
@@ -56,23 +61,13 @@ type tokenPair struct {
 	Refresh string `json:"refresh_token"`
 }
 
-func (app *application) newTokenPair(claims *tokenClaims) (*tokenPair, error) {
-	accessToken, err := app.newAccessToken(claims)
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken, err := app.newRefreshToken(claims)
-	if err != nil {
-		return nil, err
-	}
-
+func (app *application) newTokenPair(accessToken string, refreshToken string) *tokenPair {
 	pair := &tokenPair{
 		Access:  accessToken,
 		Refresh: refreshToken,
 	}
 
-	return pair, nil
+	return pair
 }
 
 func (app *application) verifyJWT(token string) (*tokenClaims, error) {
