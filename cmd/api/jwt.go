@@ -55,21 +55,6 @@ func (app *application) newRefreshToken(claims *tokenClaims) (string, error) {
 
 	return string(token), nil
 }
-
-type tokenPair struct {
-	Access  string `json:"access_token"`
-	Refresh string `json:"refresh_token"`
-}
-
-func (app *application) newTokenPair(accessToken string, refreshToken string) *tokenPair {
-	pair := &tokenPair{
-		Access:  accessToken,
-		Refresh: refreshToken,
-	}
-
-	return pair
-}
-
 func (app *application) verifyJWT(token string) (*tokenClaims, error) {
 	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token))
 	if err != nil {

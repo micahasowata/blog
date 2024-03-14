@@ -34,8 +34,6 @@ func TestRequireAccessToken(t *testing.T) {
 	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: createdUser.ID, StdClaims: nil})
 	require.Nil(t, err)
 
-	pair := app.newTokenPair(accessToken, refreshToken)
-
 	tests := []struct {
 		name   string
 		header string
@@ -43,7 +41,7 @@ func TestRequireAccessToken(t *testing.T) {
 	}{
 		{
 			name:   "valid",
-			header: "Bearer " + pair.Access,
+			header: "Bearer " + accessToken,
 			code:   http.StatusOK,
 		},
 		{
@@ -53,7 +51,7 @@ func TestRequireAccessToken(t *testing.T) {
 		},
 		{
 			name:   "refresh token",
-			header: "Bearer " + pair.Refresh,
+			header: "Bearer " + refreshToken,
 			code:   http.StatusForbidden,
 		},
 	}

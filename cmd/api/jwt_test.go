@@ -52,19 +52,3 @@ func TestVerifyToken(t *testing.T) {
 		assert.Equal(t, claimsFromToken.StdClaims.Subject, "refresh")
 	})
 }
-
-func TestNewTokenPair(t *testing.T) {
-
-	app := setupApp(t, nil)
-
-	accessToken, err := app.newAccessToken(&tokenClaims{ID: xid.New().String(), StdClaims: nil})
-	require.Nil(t, err)
-
-	refreshToken, err := app.newRefreshToken(&tokenClaims{ID: xid.New().String(), StdClaims: nil})
-	require.Nil(t, err)
-
-	pair := app.newTokenPair(accessToken, refreshToken)
-
-	assert.Equal(t, pair.Access, accessToken)
-	assert.Equal(t, pair.Refresh, refreshToken)
-}
