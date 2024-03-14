@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -83,6 +84,68 @@ func (app *application) getUserProfile(w http.ResponseWriter, r *http.Request) {
 	user, err := app.models.Users.GetByID(id)
 	if err != nil {
 		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user}, nil)
+	if err != nil {
+		app.writeErrHandler(w, err)
+		return
+	}
+}
+
+func (app *application) updateUserProfile(w http.ResponseWriter, r *http.Request) {
+	id := r.Context().Value(userID).(string)
+
+	var input struct {
+		Name     *string `json:"name" validate:"omitempty,lte=150"`
+		Username *string `json:"username" validate:"omitempty,gte=2,lte=25,ascii"`
+		Email    *string `json:"email" validate:"omitempty,email,lte=150"`
+	}
+
+	err := app.Read(w, r, &input)
+	if err != nil {
+		app.badRequestHandler(w, err)
+		return
+	}
+
+	err = app.validate.Struct(&input)
+	if err != nil {
+		app.validationErrHandler(w, err)
+		return
+	}
+
+	user, err := app.models.Users.GetByID(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrUserNotFound):
+			app.resourceNotFoundHandler(w, models.ErrUserNotFound)
+		default:
+			app.serverErrorHandler(w, err)
+		}
+		return
+	}
+
+	if input.Name != nil {
+		user.Name = *input.Name
+	}
+
+	if input.Username != nil {
+		user.Username = *input.Username
+	}
+
+	if input.Email != nil {
+		user.Email = *input.Email
+	}
+
+	user, err = app.models.Users.Update(user)
+	if err != nil {
+		switch {
+		case errors.Is(err, models.ErrUserNotFound):
+			app.resourceNotFoundHandler(w, models.ErrUserNotFound)
+		default:
+			app.duplicateUserDataHandler(w, err)
+		}
 		return
 	}
 
