@@ -16,6 +16,7 @@ func (app *application) routes() http.Handler {
 	router.Post("/v1/users/login", app.loginUser)
 	router.With(app.requireAccessToken).Post("/v1/users/logout", app.logoutUser)
 	router.With(app.requireRefreshToken).Post("/v1/tokens/refresh", app.refreshToken)
+	router.With(app.requireAccessToken).Get("/v1/users/me", app.getUserProfile)
 	return router
 }
 

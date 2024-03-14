@@ -76,3 +76,19 @@ func (app *application) registerUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (app *application) getUserProfile(w http.ResponseWriter, r *http.Request) {
+	id := r.Context().Value(userID).(string)
+
+	user, err := app.models.Users.GetByID(id)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user}, nil)
+	if err != nil {
+		app.writeErrHandler(w, err)
+		return
+	}
+}

@@ -7,7 +7,10 @@ import (
 
 	"github.com/gavv/httpexpect/v2"
 	"github.com/micahasowata/blog/internal/db"
+	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
+	"github.com/rs/xid"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterUser(t *testing.T) {
@@ -63,4 +66,37 @@ func TestRegisterUser(t *testing.T) {
 				Status(tt.code)
 		})
 	}
+}
+
+func TestGetUserProfile(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
+
+	app := setupApp(t, tdb)
+
+	user := &models.Users{
+		ID:       xid.New().String(),
+		Name:     "addam",
+		Username: "iamaddam",
+		Email:    "addam@gmail.com",
+	}
+
+	createdUser, err := app.models.Users.Insert(user)
+	require.Nil(t, err)
+
+	accessToken, err := app.newAccessToken(&tokenClaims{
+		ID: createdUser.ID,
+	})
+
+	require.Nil(t, err)
+
+	server := httptest.NewServer(app.routes())
+	defer server.Close()
+
+	req := httpexpect.Default(t, server.URL)
+
+	req.GET("/v1/users/me").
+		WithHeader("Authorization", "Bearer "+accessToken).
+		Expect().
+		Status(http.StatusOK)
 }
