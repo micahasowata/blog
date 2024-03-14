@@ -56,7 +56,7 @@ func (app *application) newRefreshToken(claims *tokenClaims) (string, error) {
 	return string(token), nil
 }
 func (app *application) verifyJWT(token string) (*tokenClaims, error) {
-	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token))
+	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), app.blocklist)
 	if err != nil {
 		return nil, err
 	}
