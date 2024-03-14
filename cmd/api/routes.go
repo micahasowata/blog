@@ -13,11 +13,13 @@ func (app *application) routes() http.Handler {
 	router.Post("/v1/users/register", app.registerUser)
 	router.Post("/v1/users/verify", app.verifyEmail)
 	router.Post("/v1/tokens/login", app.createLoginToken)
+	router.Post("/v1/users/login", app.loginUser)
 	return router
 }
 
 func (app *application) jobs() asynq.Handler {
 	mux := asynq.NewServeMux()
 	mux.HandleFunc(typeOTPEmail, app.handleOTPEmailDelivery)
+	mux.HandleFunc(typeLoginEmail, app.handleLoginEmailTask)
 	return mux
 }

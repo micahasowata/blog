@@ -133,3 +133,77 @@ func (app *application) createLoginToken(w http.ResponseWriter, r *http.Request)
 		return
 	}
 }
+
+func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Token string `json:"token" validate:"required,len=6"`
+	}
+
+	err := app.Read(w, r, &input)
+	if err != nil {
+		app.badRequestHandler(w, err)
+		return
+	}
+
+	err = app.validate.Struct(&input)
+	if err != nil {
+		app.validationErrHandler(w, err)
+		return
+	}
+
+	email, err := app.rclient.Get(r.Context(), input.Token).Result()
+	if err != nil || email == "" {
+		app.invalidTokenHandler(w, err)
+		return
+	}
+
+	user, err := app.models.Users.GetByEmail(email)
+	if err != nil {
+		app.invalidTokenHandler(w, err)
+		return
+	}
+
+	location, err := app.userLocation(app.userIP(r))
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	device := app.getUserDeviceInfo(app.getUserAgent(r))
+
+	payload := loginEmailPayload{
+		To:       user.Email,
+		Name:     user.Name,
+		Location: location,
+		Device:   device,
+	}
+
+	task, err := app.newLoginEmailTask(payload)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	_, err = app.executor.EnqueueContext(r.Context(), task)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	claims := &tokenClaims{
+		ID:        user.ID,
+		StdClaims: nil,
+	}
+
+	pair, err := app.newTokenPair(claims)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": user, "token_pair": pair}, nil)
+	if err != nil {
+		app.writeErrHandler(w, err)
+		return
+	}
+}
