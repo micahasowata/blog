@@ -220,11 +220,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
-	token, ok := r.Context().Value(userToken).(string)
-	if !ok {
-		app.serverErrorHandler(w, errors.New("tampered token"))
-		return
-	}
+	token := r.Context().Value(userToken).(string)
 
 	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), app.blocklist)
 	if err != nil {
@@ -246,11 +242,7 @@ func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) refreshToken(w http.ResponseWriter, r *http.Request) {
-	token, ok := r.Context().Value(userToken).(string)
-	if !ok {
-		app.serverErrorHandler(w, errors.New("tampered token"))
-		return
-	}
+	token := r.Context().Value(userToken).(string)
 
 	verifiedToken, err := jwt.Verify(jwt.HS256, app.config.Key, []byte(token), app.blocklist)
 	if err != nil {
