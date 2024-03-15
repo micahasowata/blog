@@ -189,7 +189,6 @@ func TestLoginUser(t *testing.T) {
 	require.Nil(t, err)
 
 	token := setUpToken(t, app, createdUser)
-	body := fmt.Sprintf(`{"token":"%s"}`, token)
 
 	tests := []struct {
 		name string
@@ -198,7 +197,7 @@ func TestLoginUser(t *testing.T) {
 	}{
 		{
 			name: "valid",
-			body: body,
+			body: fmt.Sprintf(`{"token":"%s"}`, token),
 			code: http.StatusOK,
 		},
 		{
