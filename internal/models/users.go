@@ -17,6 +17,7 @@ type User interface {
 	GetByEmail(string) (*Users, error)
 	GetByID(string) (*Users, error)
 	Update(*Users) (*Users, error)
+	Delete(string) error
 }
 
 type Users struct {
