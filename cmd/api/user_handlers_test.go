@@ -185,3 +185,35 @@ func TestUpdateUser(t *testing.T) {
 		})
 	}
 }
+
+func TestDeleteUserProfile(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
+
+	app := setupApp(t, tdb)
+
+	user := &models.Users{
+		ID:       xid.New().String(),
+		Name:     "addam",
+		Username: "iamaddam",
+		Email:    "addam@gmail.com",
+	}
+
+	createdUser, err := app.models.Users.Insert(user)
+	require.Nil(t, err)
+
+	accessToken, err := app.newAccessToken(&tokenClaims{
+		ID: createdUser.ID,
+	})
+	require.Nil(t, err)
+
+	server := httptest.NewServer(app.routes())
+	defer server.Close()
+
+	req := httpexpect.Default(t, server.URL)
+
+	req.DELETE("/v1/users/delete").
+		WithHeader("Authorization", "Bearer "+accessToken).
+		Expect().
+		Status(http.StatusOK)
+}

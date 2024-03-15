@@ -155,3 +155,19 @@ func (app *application) updateUserProfile(w http.ResponseWriter, r *http.Request
 		return
 	}
 }
+
+func (app *application) deleteUserProfile(w http.ResponseWriter, r *http.Request) {
+	id := r.Context().Value(userID).(string)
+
+	err := app.models.Users.Delete(id)
+	if err != nil {
+		app.serverErrorHandler(w, err)
+		return
+	}
+
+	err = app.Write(w, http.StatusOK, jason.Envelope{"user": "user deleted successfully"}, nil)
+	if err != nil {
+		app.writeErrHandler(w, err)
+		return
+	}
+}
