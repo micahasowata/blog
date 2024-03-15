@@ -296,3 +296,29 @@ func TestUpdateUser(t *testing.T) {
 		})
 	}
 }
+
+func TestDelete(t *testing.T) {
+	tdb := setupDB(t)
+	defer db.Clean(tdb)
+
+	model := &UsersModel{
+		DB: tdb,
+	}
+
+	user := &Users{
+		ID:       xid.New().String(),
+		Name:     "Adam",
+		Username: "iamadam",
+		Email:    "adam45@gmail.com",
+	}
+
+	createdUser, err := model.Insert(user)
+	require.Nil(t, err)
+
+	err = model.Delete(createdUser.ID)
+	require.Nil(t, err)
+
+	user, err = model.GetByID(createdUser.ID)
+	require.NotNil(t, err)
+	require.Nil(t, user)
+}
