@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
-	"log"
+	"testing"
 	"time"
 
 	"github.com/go-playground/locales/en"
@@ -11,80 +10,68 @@ import (
 	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/hibiken/asynq"
-	"github.com/joho/godotenv"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kataras/jwt"
 	"github.com/micahasowata/blog/internal/config"
 	"github.com/micahasowata/blog/internal/db"
 	"github.com/micahasowata/blog/internal/models"
 	"github.com/micahasowata/jason"
 	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 )
 
-type application struct {
-	*jason.Jason
+func setupDB(t *testing.T) *pgxpool.Pool {
+	t.Helper()
 
-	logger     *zap.Logger
-	config     *config.Config
-	translator ut.Translator
-	validate   *validator.Validate
-	models     *models.Models
-	rclient    *redis.Client
-	executor   *asynq.Client
-	blocklist  *jwt.Blocklist
+	cfg, err := config.New()
+	require.Nil(t, err)
+
+	tdb, err := db.NewTest(cfg)
+	require.Nil(t, err)
+
+	return tdb
 }
 
-func main() {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+func setupApp(t *testing.T, db *pgxpool.Pool) *application {
+	t.Helper()
 
-	err = godotenv.Load()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	config, err := config.New()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	db, err := db.NewProduction(config)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	cfg, err := config.New()
+	require.Nil(t, err)
 
 	localeEN := en.New()
 	universal := ut.New(localeEN, localeEN)
+
 	translator, ok := universal.GetTranslator("en")
-	if !ok {
-		log.Fatal(errors.New("unable to get validation translator"))
-	}
+	require.NotEmpty(t, ok)
+
 	validate := validator.New(validator.WithRequiredStructEnabled())
 	en_translations.RegisterDefaultTranslations(validate, translator)
 
 	executor := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: config.RDB,
+		Addr: cfg.RDB,
 	})
 
 	rclient := redis.NewClient(&redis.Options{
-		Addr: config.RDB,
+		Addr: cfg.RDB,
 	})
 
-	blocklist := jwt.NewBlocklistContext(context.Background(), 1*time.Hour)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	blocklist := jwt.NewBlocklistContext(ctx, 1*time.Hour)
 
 	app := &application{
-		Jason:      jason.New(int64(config.MaxSize), false, true),
-		logger:     logger,
-		config:     config,
-		translator: translator,
+		Jason:      jason.New(int64(cfg.MaxSize), false, true),
+		logger:     zap.NewExample(),
+		config:     cfg,
 		validate:   validate,
+		translator: translator,
 		models:     models.New(db),
-		rclient:    rclient,
 		executor:   executor,
+		rclient:    rclient,
 		blocklist:  blocklist,
 	}
 
-	app.serve()
+	return app
 }

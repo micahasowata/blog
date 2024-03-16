@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/micahasowata/blog/internal/config"
 )
@@ -34,35 +33,12 @@ func NewTest(cfg *config.Config) (*pgxpool.Pool, error) {
 }
 
 func Clean(db *pgxpool.Pool) error {
-	query := `
-	DO $$ DECLARE r RECORD;
-		BEGIN FOR r IN (
-			SELECT 
-				tablename 
-			FROM 
-				pg_tables 
-			WHERE 
-				schema_name = 'public'
-			) LOOP EXECUTE 'drop table if exists ' || quote_ident(r.tablename) || ' cascade';
-		END LOOP;
-	END $$;
-	`
+	query := `DELETE FROM users`
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	tx, err := db.BeginTx(ctx, pgx.TxOptions{
-		IsoLevel:       pgx.Serializable,
-		AccessMode:     pgx.ReadWrite,
-		DeferrableMode: pgx.NotDeferrable,
-	})
-
-	if err != nil {
-		return err
-	}
-
-	defer tx.Rollback(ctx)
-
-	_, err = tx.Exec(ctx, query)
+	_, err := db.Exec(ctx, query)
 	if err != nil {
 		return err
 	}
